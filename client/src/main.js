@@ -11,9 +11,10 @@ import App from './App'
 import router from './router'
 
 Vue.config.productionTip = false
+let removePort = address => (address.split(':').length > 1 ? address.split(':', 2).join(':') : address)
 
 Vue.use(ElementUI)
-Vue.use(VueSocketio, 'http://localhost:3000')
+Vue.use(VueSocketio, `${removePort(window.location.origin)}:3000`)
 
 /* eslint-disable no-new */
 new Vue({
