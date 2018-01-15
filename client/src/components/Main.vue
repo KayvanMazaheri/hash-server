@@ -165,8 +165,22 @@ Oe6lSHTplzRc0QPTat5+mQ==
       this.$socket.emit('handshake', { publicKey: this.client.publicKey })
       this.loadings.configBtn = true
     },
+    basicAuthenticate () {},
+    passwordlessAuthenticate () {},
     register () {
+      let registerRequest = {
+        username: this.auth.username,
+        password: this.auth.password
+      }
 
+      let request = {
+        data: registerRequest,
+        sign: null
+      }
+
+      AES.encryptMessage(this.common.aesKey, JSON.stringify(request)).then(encryptedRequest => {
+        this.$socket.emit('register', encryptedRequest)
+      })
     }
   },
   sockets: {
@@ -187,7 +201,7 @@ Oe6lSHTplzRc0QPTat5+mQ==
       this.connected = false
       this.step = -1
     },
-    error (err) {
+    err (err) {
       this.$notify.error({
         title: 'Error',
         message: err
@@ -210,6 +224,18 @@ Oe6lSHTplzRc0QPTat5+mQ==
           this.step = 1
           this.loadings.configBtn = false
         })
+      })
+    },
+    register (data) {
+      AES.decryptMessage(this.common.aesKey, data.encryptedResponse).then(decryptedData => {
+        decryptedData = JSON.parse(decryptedData)
+
+        this.$notify({
+          title: 'Registered',
+          message: 'New user registered successfully. Now you can login using your username and password.',
+          type: 'success'
+        })
+        this.auth.switchLoginSignup = false
       })
     }
   }
