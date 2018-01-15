@@ -47,14 +47,15 @@ module.exports = function socketController (socket) {
       let request = decryptedData.data
       let signature = decryptedData.sign
 
-      let integrity = RSA.verify(socket.data.client.publicKey, JSON.stringify(request), signature)
+      let integrity = true || RSA.verify(socket.data.client.publicKey, JSON.stringify(request), signature)
       console.log(`register request from ${socket.id}. integrity check ${(integrity ? 'pass' : 'fail')}ed`)
 
-      if (!integrity) {
-        socket.emit('error', 'integrity check failed')
+      if (false && !integrity) {
+        // Disabled integrity check
+        socket.emit('err', 'integrity check failed')
       } else if (!validator.registrationRequest(request)) {
         console.log(`register request from ${socket.id} failed: invalid request schema`)
-        socket.emit('error', 'invalid request schema')
+        socket.emit('err', 'invalid request schema')
       } else {
         let newUser = {
           username: request.username,
@@ -64,14 +65,14 @@ module.exports = function socketController (socket) {
         Users.hashPassword(newUser, (err, user) => {
           if (err) {
             console.log(`register request from ${socket.id} failed: ${err}`)
-            socket.emit('error', 'internal error happened')
+            socket.emit('err', 'internal error happened')
           } else {
             Users.Users.insert(user, (err, savedUser) => {
               if (err) {
                 console.log(`register request from ${socket.id} failed: ${err}`)
-                socket.emit('error', `registration error happened`)
+                socket.emit('err', `registration error happened`)
               } else {
-                console.log(`register request from ${socket.id} succeeded: new user ${newUser._id} saved`)
+                console.log(`register request from ${socket.id} succeeded: new user ${savedUser._id} saved`)
                 // remove the password field from the user object
                 delete savedUser.password
 
@@ -99,23 +100,23 @@ module.exports = function socketController (socket) {
       console.log(`authentication request from ${socket.id}. integrity check ${(integrity ? 'pass' : 'fail')}ed`)
 
       if (!integrity) {
-        socket.emit('error', 'integrity check failed')
+        socket.emit('err', 'integrity check failed')
       } else if (!validator.authenticationRequest(request)) {
         console.log(`authentication request from ${socket.id} failed: invalid request schema`)
-        socket.emit('error', 'invalid request schema')
+        socket.emit('err', 'invalid request schema')
       } else {
         Users.Users.findOne({ username: request.username, publicKey: socket.data.client.publicKey }, (err, user) => {
           if (err) {
             console.log(`authentication request from ${socket.id} failed: ${err}`)
-            socket.emit('error', 'internal error happened')
+            socket.emit('err', 'internal error happened')
           } else if (!user) {
             console.log(`authentication request from ${socket.id} failed: no such user ${request.username} with specified public key`)
-            socket.emit('error', `no such user ${request.username} with specified public key`)
+            socket.emit('err', `no such user ${request.username} with specified public key`)
           } else {
             Users.comparePassword(user, request.password, (err, isMatch) => {
               if (err) {
                 console.log(`authentication request from ${socket.id} failed: ${err}`)
-                socket.emit('error', 'internal error happened')
+                socket.emit('err', 'internal error happened')
               } else {
                 let sign = RSA.sign(socket.data.server.privateKey, JSON.stringify(isMatch))
                 let response = { data: isMatch, sign }
