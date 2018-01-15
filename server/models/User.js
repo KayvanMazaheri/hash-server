@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt-nodejs')
 
 const Datastore = require('nedb')
 
@@ -9,7 +9,7 @@ const hashPassword = (user, cb) => {
     if (err) {
       cb(err)
     }
-    bcrypt.hash(user.password, salt, function (err, hash) {
+    bcrypt.hash(user.password, salt, null, function (err, hash) {
       if (err) {
         cb(err)
       }
