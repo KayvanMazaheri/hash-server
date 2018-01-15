@@ -86,7 +86,54 @@ module.exports = function socketController (socket) {
       }
 
     })
-    socket.on('auth', data => {})
+    socket.on('auth', data => {
+      data = JSON.parse(data)
+
+      let decryptedData = JSON.parse(AES.decrypt(socket.data.common.aesKey, data))
+      let request = decryptedData.data
+      let signature = decryptedData.sign
+
+      let integrity = RSA.verify(socket.data.client.publicKey, JSON.stringify(request), signature)
+      console.log(`authentication request from ${socket.id}. integrity check ${(integrity ? 'pass' : 'fail')}ed`)
+
+      if (!integrity) {
+        socket.emit('error', 'integrity check failed')
+      } else if (!validator.authenticationRequest(request)) {
+        console.log(`authentication request from ${socket.id} failed: invalid request schema`)
+        socket.emit('error', 'invalid request schema')
+      } else {
+        Users.Users.findOne({ username: request.username, publicKey: socket.data.client.publicKey }, (err, user) => {
+          if (err) {
+            console.log(`authentication request from ${socket.id} failed: ${err}`)
+            socket.emit('error', 'internal error happened')
+          } else if (!user) {
+            console.log(`authentication request from ${socket.id} failed: no such user ${request.username} with specified public key`)
+            socket.emit('error', `no such user ${request.username} with specified public key`)
+          } else {
+            Users.comparePassword(user, request.password, (err, isMatch) => {
+              if (err) {
+                console.log(`authentication request from ${socket.id} failed: ${err}`)
+                socket.emit('error', 'internal error happened')
+              } else {
+                let sign = RSA.sign(socket.data.server.privateKey, JSON.stringify(isMatch))
+                let response = { data: isMatch, sign }
+
+                let encryptedResponse = AES.createAesMessage(socket.data.common.aesKey, JSON.stringify(response))
+
+                socket.emit('auth', { encryptedResponse })
+
+                if (isMatch) {
+                  // Authenticated !
+                  socket.on('hash', data => {
+                    
+                  })
+                }
+              }
+            })
+          }
+        })
+      }
+    })
   })
   socket.on('disconnect', () => {
     console.log(`${socket.id} disconnected`)
