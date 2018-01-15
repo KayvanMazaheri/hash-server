@@ -77,6 +77,28 @@
               </transition>
               <el-button id="switchLoginSignup" type="text" @click="switchLoginSignup">{{switchLoginSignupText}}</el-button>
             </div>
+            <div id="hash" v-if="step == 2">
+
+                <el-form ref="hashForm" :model="hash" label-width="120px">
+                  <el-form-item label="Value to Hash">
+                    <el-input type="textarea"
+                      :disabled="loadings.hashBtn"
+                      v-model="hash.text"
+                      :rows="4"
+                      placeholder="Enter The Text You Need To Hash"
+                      >
+                    </el-input>
+                  </el-form-item>
+                  <el-button :loading="loadings.hashBtn" type="primary" @click="hashReq" plain>Request Hash</el-button>
+                  <el-dialog
+                    title="Hashed Value"
+                    :visible.sync="hash.showDialog"
+                    width="40%"
+                    center>
+                    <p>{{hash.hashedValue}}</p>
+                  </el-dialog>
+                </el-form>
+            </div>
           </el-main>
         </el-container>
       </el-card>
@@ -95,10 +117,10 @@ export default {
       loadings: {
         configBtn: false,
         registerBtn: false,
-        authBtn: false
+        authBtn: false,
+        hashBtn: false
       },
       connected: false,
-      text: '',
       step: -1,
       client: {
         publicKey: `-----BEGIN PUBLIC KEY-----
@@ -151,6 +173,11 @@ Oe6lSHTplzRc0QPTat5+mQ==
         username: '',
         password: '',
         passwordConfirmation: ''
+      },
+      hash: {
+        showDialog: false,
+        text: '',
+        hashedValue: 'Loading ...'
       }
     }
   },
@@ -166,6 +193,21 @@ Oe6lSHTplzRc0QPTat5+mQ==
     handshake () {
       this.loadings.configBtn = true
       this.$socket.emit('handshake', { publicKey: this.client.publicKey })
+    },
+    hashReq () {
+      this.hash.showDialog = false
+      this.loadings.hashBtn = true
+      let hashRequest = this.hash.text
+
+      let request = {
+        data: hashRequest,
+        sign: null
+      }
+
+      AES.encryptMessage(this.common.aesKey, JSON.stringify(request)).then(encryptedRequest => {
+        this.$socket.emit('hash', encryptedRequest)
+      })
+
     },
     basicAuthenticate () {
       this.loadings.authBtn = true
@@ -227,8 +269,19 @@ Oe6lSHTplzRc0QPTat5+mQ==
       this.loadings = {
         configBtn: false,
         registerBtn: false,
-        authBtn: false
+        authBtn: false,
+        hashBtn: false
       }
+    },
+    hash (data) {
+      AES.decryptMessage(this.common.aesKey, data.encryptedResponse).then(hashedValue => {
+        hashedValue = JSON.parse(hashedValue)
+        // console.log(`Authenticated ${isAuthenticated}`)
+        this.hash.hashedValue = hashedValue.data
+
+        this.loadings.hashBtn = false
+        this.hash.showDialog = true
+      })
     },
     handshake (data) {
       // console.log(`handshake: \n${JSON.stringify(data)}`)
