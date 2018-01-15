@@ -1,5 +1,6 @@
 const AES = require('../helpers/aes')
 const RSA = require('../helpers/rsa')
+const HASH = require('../helpers/hash')
 const validator = require('../helpers/validator')
 const crypto = require('crypto')
 
@@ -128,9 +129,32 @@ module.exports = function socketController (socket) {
                   // Authenticated !
                   socket.removeAllListeners('auth')
                   socket.removeAllListeners('registration')
-
+                  socket.on('fin', data => {
+                    console.log(`fin request from ${socket.id}`)
+                    socket.disconnect(true)
+                  })
                   socket.on('hash', data => {
+                    let decryptedData = JSON.parse(AES.decrypt(socket.data.common.aesKey, data))
+                    let request = decryptedData.data
+                    let signature = decryptedData.sign
 
+                    let integrity = true || RSA.verify(socket.data.client.publicKey, JSON.stringify(request), signature)
+                    console.log(`hash request from ${socket.id}. integrity check ${(integrity ? 'pass' : 'fail')}ed`)
+
+                    if (false && !integrity) {
+                      socket.emit('err', 'integrity check failed')
+                    } else if (!validator.hashRequest(request)) {
+                      console.log(`hash request from ${socket.id} failed: invalid request schema`)
+                      socket.emit('err', 'invalid request schema')
+                    } else {
+                      let hashedValue = HASH.sha256(request)
+                      let sign = RSA.sign(socket.data.server.privateKey, JSON.stringify(hashedValue))
+                      let response = { data: hashedValue, sign }
+                      console.log(`hash request from ${socket.id}: ${hashedValue}`)
+                      let encryptedResponse = AES.createAesMessage(socket.data.common.aesKey, JSON.stringify(response))
+
+                      socket.emit('hash', { encryptedResponse })
+                    }
                   })
                 }
               }

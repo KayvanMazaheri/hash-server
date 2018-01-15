@@ -4,5 +4,8 @@ module.exports = {
   },
   authenticationRequest (request) {
     return true
+  },
+  hashRequest (request) {
+    return true
   }
 }
