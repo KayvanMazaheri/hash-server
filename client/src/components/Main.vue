@@ -22,6 +22,7 @@
               <el-form ref="configForm" :model="client" label-width="120px">
                 <el-form-item label="Public Key">
                   <el-input
+                    :disabled="loadings.configBtn"
                     type="textarea"
                     :rows="4"
                     placeholder="Please Enter Your Public Key Here"
@@ -30,13 +31,14 @@
                 </el-form-item>
                 <el-form-item label="Private Key">
                   <el-input
+                    :disabled="loadings.configBtn"
                     type="textarea"
                     :rows="6"
                     placeholder="Please Enter Your Private Key Here"
                     v-model="client.privateKey">
                   </el-input>
                 </el-form-item>
-                <el-button type="primary" @click="handshake">Save Configuration</el-button>
+                <el-button v-loading="loadings.configBtn" type="primary" @click="handshake">Save Configuration</el-button>
               </el-form>
             </div>
             <div id="auth" v-if="step == 1">
@@ -73,7 +75,7 @@
                   <el-button type="success" @click="register">Register</el-button>
                 </el-form>
               </transition>
-              <el-button id="switchLoginSignup"type="text" @click="switchLoginSignup">{{switchLoginSignupText}}</el-button>
+              <el-button id="switchLoginSignup" type="text" @click="switchLoginSignup">{{switchLoginSignupText}}</el-button>
             </div>
           </el-main>
         </el-container>
@@ -90,6 +92,9 @@ import AES from '../helpers/aes'
 export default {
   data () {
     return {
+      loadings: {
+        configBtn: false
+      },
       connected: false,
       text: '',
       step: -1,
@@ -158,6 +163,10 @@ Oe6lSHTplzRc0QPTat5+mQ==
     },
     handshake () {
       this.$socket.emit('handshake', { publicKey: this.client.publicKey })
+      this.loadings.configBtn = true
+    },
+    register () {
+
     }
   },
   sockets: {
@@ -185,16 +194,21 @@ Oe6lSHTplzRc0QPTat5+mQ==
       })
     },
     handshake (data) {
-      console.log(`handshake: \n${JSON.stringify(data)}`)
+      // console.log(`handshake: \n${JSON.stringify(data)}`)
       RSA.privateDecrypt(this.client.privateKey, data.encryptedAESKey).then(decryptedAESKey => {
         // console.log(`decrypted aes key is ${JSON.stringify(Buffer.from(decryptedAESKey))}`)
         this.common.aesKey = decryptedAESKey
         AES.decryptMessage(decryptedAESKey, data.encryptedHandshakePackage).then(handshakePackage => {
-          // console.log(`handshake package: \n${JSON.stringify(handshakePackage)}`)
           handshakePackage = JSON.parse(handshakePackage)
+          // console.log(`handshake package: \n${(handshakePackage.sign)}`)
           this.server.publicKey = handshakePackage.data.server.publicKey
           this.common.nonce = handshakePackage.data.server.nonce
+          // console.log(this.server.publicKey)
+          // RSA.verify(this.server.publicKey, JSON.stringify(handshakePackage.data), handshakePackage.sign).then(verified => {
+          //   console.log(`handshake verification: ${verified}`)
+          // })
           this.step = 1
+          this.loadings.configBtn = false
         })
       })
     }
