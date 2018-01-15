@@ -98,6 +98,7 @@
                     <p>{{hash.hashedValue}}</p>
                   </el-dialog>
                 </el-form>
+                <el-button id="finBtn" type="danger" @click="fin">Fin</el-button>
             </div>
           </el-main>
         </el-container>
@@ -193,6 +194,9 @@ Oe6lSHTplzRc0QPTat5+mQ==
     handshake () {
       this.loadings.configBtn = true
       this.$socket.emit('handshake', { publicKey: this.client.publicKey })
+    },
+    fin () {
+      this.$socket.emit('fin')
     },
     hashReq () {
       this.hash.showDialog = false
@@ -387,5 +391,12 @@ p.liner:after {
 .fade-enter, .fade-leave-to {
   opacity: 0;
 } */
+
+button#finBtn {
+  margin-top: 2em;
+  width: 5em;
+  position: relative;
+  margin-right: -90%;
+}
 
 </style>
