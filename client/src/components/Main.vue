@@ -16,68 +16,74 @@
             </el-steps>
           </el-header>
           <el-main>
-            <div id="config" v-if="step == 0">
-              <p>This client needs an RSA key pair to be able to communicate with the server in a secure way.</p>
+            <transition
+              name="fade"
+              enter-active-class="animated fadeInUp"
+              leave-active-class="animated zoomOut"
+              mode="out-in"
+              appear>
+              <div id="config" v-if="step == 0" key="config">
+                <p>This client needs an RSA key pair to be able to communicate with the server in a secure way.</p>
 
-              <el-form ref="configForm" :model="client" label-width="120px">
-                <el-form-item label="Public Key">
-                  <el-input
-                    :disabled="loadings.configBtn"
-                    type="textarea"
-                    :rows="4"
-                    placeholder="Please Enter Your Public Key Here"
-                    v-model="client.publicKey">
-                  </el-input>
-                </el-form-item>
-                <el-form-item label="Private Key">
-                  <el-input
-                    :disabled="loadings.configBtn"
-                    type="textarea"
-                    :rows="6"
-                    placeholder="Please Enter Your Private Key Here"
-                    v-model="client.privateKey">
-                  </el-input>
-                </el-form-item>
-                <el-button :loading="loadings.configBtn" type="primary" @click="handshake">Save Configuration</el-button>
-              </el-form>
-            </div>
-            <div id="auth" v-if="step == 1">
-              <transition
-                name="fade"
-                enter-active-class="animated zoomIn"
-                leave-active-class="animated zoomOut"
-                mode="out-in"
-                appear>
-
-                <el-form ref="authForm" :model="auth" label-width="120px" v-if="!auth.switchLoginSignup" key="1">
-                  <el-form-item label="Username">
-                    <el-input :disabled="loadings.authBtn" v-model="auth.username"></el-input>
+                <el-form ref="configForm" :model="client" label-width="120px">
+                  <el-form-item label="Public Key">
+                    <el-input
+                      :disabled="loadings.configBtn"
+                      type="textarea"
+                      :rows="4"
+                      placeholder="Please Enter Your Public Key Here"
+                      v-model="client.publicKey">
                     </el-input>
                   </el-form-item>
-                  <el-form-item label="Password">
-                     <el-input :disabled="loadings.authBtn" type="password" v-model="auth.password" auto-complete="off"></el-input>
-                  </el-form-item>
-                  <el-button :loading="loadings.authBtn" type="primary" @click="basicAuthenticate">Authenticate</el-button>
-                  <p class="liner"> OR </p>
-                  <el-button :loading="loadings.authBtn" type="success" @click="passwordlessAuthenticate">Authenticate Without Password</el-button>
-                </el-form>
-                <el-form ref="authFormSignup" :model="auth" label-width="120px" v-if="auth.switchLoginSignup" key="2">
-                  <el-form-item label="Username">
-                    <el-input :disabled="loadings.registerBtn" v-model="auth.username"></el-input>
+                  <el-form-item label="Private Key">
+                    <el-input
+                      :disabled="loadings.configBtn"
+                      type="textarea"
+                      :rows="6"
+                      placeholder="Please Enter Your Private Key Here"
+                      v-model="client.privateKey">
                     </el-input>
                   </el-form-item>
-                  <el-form-item label="Password">
-                     <el-input :disabled="loadings.registerBtn" type="password" v-model="auth.password" auto-complete="off"></el-input>
-                  </el-form-item>
-                  <el-form-item label="Confirm">
-                     <el-input :disabled="loadings.registerBtn" type="password" v-model="auth.passwordConfirmation" auto-complete="off"></el-input>
-                  </el-form-item>
-                  <el-button :loading="loadings.registerBtn" type="success" @click="register">Register</el-button>
+                  <el-button :loading="loadings.configBtn" type="primary" @click="handshake">Save Configuration</el-button>
                 </el-form>
-              </transition>
-              <el-button id="switchLoginSignup" type="text" @click="switchLoginSignup">{{switchLoginSignupText}}</el-button>
-            </div>
-            <div id="hash" v-if="step == 2">
+              </div>
+              <div id="auth" v-if="step == 1" key="auth">
+                <transition
+                  name="fade"
+                  enter-active-class="animated zoomIn"
+                  leave-active-class="animated zoomOut"
+                  mode="out-in"
+                  appear>
+
+                  <el-form ref="authForm" :model="auth" label-width="120px" v-if="!auth.switchLoginSignup" key="1">
+                    <el-form-item label="Username">
+                      <el-input :disabled="loadings.authBtn" v-model="auth.username"></el-input>
+                      </el-input>
+                    </el-form-item>
+                    <el-form-item label="Password">
+                       <el-input :disabled="loadings.authBtn" type="password" v-model="auth.password" auto-complete="off"></el-input>
+                    </el-form-item>
+                    <el-button :loading="loadings.authBtn" type="primary" @click="basicAuthenticate">Authenticate</el-button>
+                    <p class="liner"> OR </p>
+                    <el-button :loading="loadings.authBtn" type="success" @click="passwordlessAuthenticate">Authenticate Without Password</el-button>
+                  </el-form>
+                  <el-form ref="authFormSignup" :model="auth" label-width="120px" v-if="auth.switchLoginSignup" key="2">
+                    <el-form-item label="Username">
+                      <el-input :disabled="loadings.registerBtn" v-model="auth.username"></el-input>
+                      </el-input>
+                    </el-form-item>
+                    <el-form-item label="Password">
+                       <el-input :disabled="loadings.registerBtn" type="password" v-model="auth.password" auto-complete="off"></el-input>
+                    </el-form-item>
+                    <el-form-item label="Confirm">
+                       <el-input :disabled="loadings.registerBtn" type="password" v-model="auth.passwordConfirmation" auto-complete="off"></el-input>
+                    </el-form-item>
+                    <el-button :loading="loadings.registerBtn" type="success" @click="register">Register</el-button>
+                  </el-form>
+                </transition>
+                <el-button id="switchLoginSignup" type="text" @click="switchLoginSignup">{{switchLoginSignupText}}</el-button>
+              </div>
+              <div id="hash" v-if="step == 2" key="hash">
 
                 <el-form ref="hashForm" :model="hash" label-width="120px">
                   <el-form-item label="Value to Hash">
@@ -100,6 +106,7 @@
                 </el-form>
                 <el-button id="finBtn" type="danger" @click="fin">Fin</el-button>
             </div>
+          </transition>
           </el-main>
         </el-container>
       </el-card>
@@ -211,7 +218,6 @@ Oe6lSHTplzRc0QPTat5+mQ==
       AES.encryptMessage(this.common.aesKey, JSON.stringify(request)).then(encryptedRequest => {
         this.$socket.emit('hash', encryptedRequest)
       })
-
     },
     basicAuthenticate () {
       this.loadings.authBtn = true
@@ -397,6 +403,16 @@ button#finBtn {
   width: 5em;
   position: relative;
   margin-right: -90%;
+}
+
+>>> .box-card {
+  -moz-transition: all .5s linear;
+  -webkit-transition: all .5s linear;
+  -moz-transition: all .5s linear;
+  -o-transition: all .5s linear;
+  transition: all .5s linear;
+
+  min-height: 40em;
 }
 
 </style>
