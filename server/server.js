@@ -3,6 +3,7 @@ const express = require('express')
 const dotenv = require('dotenv')
 const socketio = require('socket.io')
 const http = require('http')
+const path = require('path')
 
 const { socketController } = require('./controllers')
 
@@ -13,6 +14,11 @@ dotenv.load()
 const app = express()
 const httpServer = http.Server(app)
 const io = socketio(httpServer)
+
+app.use('/static', express.static(path.join(__dirname, '/dist/static')))
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname + '/dist/index.html'));
+})
 
 // Load the socket.io controllers
 io.on('connection', socketController)
