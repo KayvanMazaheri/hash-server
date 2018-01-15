@@ -187,9 +187,14 @@ Oe6lSHTplzRc0QPTat5+mQ==
     handshake (data) {
       console.log(`handshake: \n${JSON.stringify(data)}`)
       RSA.privateDecrypt(this.client.privateKey, data.encryptedAESKey).then(decryptedAESKey => {
-        console.log(`decrypted aes key is ${Buffer.from(decryptedAESKey).toString('hex')}`)
+        // console.log(`decrypted aes key is ${JSON.stringify(Buffer.from(decryptedAESKey))}`)
+        this.common.aesKey = decryptedAESKey
         AES.decryptMessage(decryptedAESKey, data.encryptedHandshakePackage).then(handshakePackage => {
-          console.log(`handshake package: \n${JSON.stringify(handshakePackage)}`)
+          // console.log(`handshake package: \n${JSON.stringify(handshakePackage)}`)
+          handshakePackage = JSON.parse(handshakePackage)
+          this.server.publicKey = handshakePackage.data.server.publicKey
+          this.common.nonce = handshakePackage.data.server.nonce
+          this.step = 1
         })
       })
     }

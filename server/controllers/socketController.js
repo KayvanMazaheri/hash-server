@@ -20,14 +20,14 @@ module.exports = function socketController (socket) {
     nonce: crypto.randomBytes(32)
   }
 
-  console.log(`shared AES key is ${socket.data.common.aesKey.toString('hex')}`)
+  // console.log(`shared AES key is ${JSON.stringify(socket.data.common.aesKey)} type: ${typeof socket.data.common.aesKey}`)
 
   socket.on('handshake', data => {
     // data = JSON.parse(data)
     socket.data.client.publicKey = data.publicKey
     console.log(`handshake from ${socket.id}. Public Key:\n ${socket.data.client.publicKey}`)
 
-    let encryptedAESKey = RSA.encrypt(socket.data.client.publicKey, socket.data.common.aesKey)
+    let encryptedAESKey = RSA.encrypt(socket.data.client.publicKey, socket.data.common.aesKey.toString('base64'))
     let handshakeData = {
       server: { publicKey: socket.data.server.publicKey },
       nonce: socket.data.common.nonce,

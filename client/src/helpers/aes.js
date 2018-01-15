@@ -58,7 +58,7 @@ function encryptMessage (key, message) {
 
 function decryptMessage (key, message) {
   var data = separateVectorFromData(message)
-  console.log(`IV: ${data.iv} \nMSG: ${data.message}`)
+  // console.log(`IV: ${data.iv} \nMSG: ${data.message}`)
 
   return new Promise(function (resolve, reject) {
     importPublicKey(key).then(function (key) {

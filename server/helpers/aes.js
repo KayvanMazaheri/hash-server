@@ -39,7 +39,7 @@ const addIvToBody = (iv, encryptedBase64) => encryptedBase64 + iv.toString('base
 
 const createAesMessage = (aesKey, message) => {
   let aesIv = generateIv()
-  console.log(`IV: ${aesIv.toString('base64')} \nMSG: ${message}`)
+  // console.log(`IV: ${aesIv.toString('base64')} \nMSG: ${message}`)
   let encryptedMessage = encrypt(aesKey, aesIv, message)
   encryptedMessage = addIvToBody(aesIv, encryptedMessage)
 
