@@ -25,8 +25,8 @@
               <div id="config" v-if="step == 0" key="config">
                 <p>This client needs an RSA key pair to be able to communicate with the server in a secure way.</p>
 
-                <el-form ref="configForm" :model="client" label-width="120px">
-                  <el-form-item label="Public Key">
+                <el-form ref="configForm" :rules="configRules" :model="client" label-width="120px">
+                  <el-form-item label="Public Key" prop="publicKey">
                     <el-input
                       :disabled="loadings.configBtn"
                       type="textarea"
@@ -35,7 +35,7 @@
                       v-model="client.publicKey">
                     </el-input>
                   </el-form-item>
-                  <el-form-item label="Private Key">
+                  <el-form-item label="Private Key" prop="privateKey">
                     <el-input
                       :disabled="loadings.configBtn"
                       type="textarea"
@@ -55,28 +55,28 @@
                   mode="out-in"
                   appear>
 
-                  <el-form ref="authForm" :model="auth" label-width="120px" v-if="!auth.switchLoginSignup" key="1">
-                    <el-form-item label="Username">
-                      <el-input :disabled="loadings.authBtn" v-model="auth.username"></el-input>
+                  <el-form ref="authForm" :rules="authRules" :model="auth" label-width="120px" v-if="!auth.switchLoginSignup" key="1">
+                    <el-form-item label="Username" prop="username">
+                      <el-input :disabled="loadings.authBtn" v-model="auth.username" ></el-input>
                       </el-input>
                     </el-form-item>
-                    <el-form-item label="Password">
-                       <el-input :disabled="loadings.authBtn" type="password" v-model="auth.password" auto-complete="off"></el-input>
+                    <el-form-item label="Password" prop="password">
+                       <el-input :disabled="loadings.authBtn" type="password" v-model="auth.password" auto-complete="off" ></el-input>
                     </el-form-item>
                     <el-button :loading="loadings.authBtn" type="primary" @click="basicAuthenticate">Authenticate</el-button>
                     <p class="liner"> OR </p>
-                    <el-button :loading="loadings.authBtn" type="success" @click="passwordlessAuthenticate">Authenticate Without Password</el-button>
+                    <el-button :disabled="true" :loading="loadings.authBtn" type="success" @click="passwordlessAuthenticate">Authenticate Without Password</el-button>
                   </el-form>
-                  <el-form ref="authFormSignup" :model="auth" label-width="120px" v-if="auth.switchLoginSignup" key="2">
-                    <el-form-item label="Username">
+                  <el-form ref="authFormSignup" :rules="registerRules" :model="auth" label-width="120px" v-if="auth.switchLoginSignup" key="2">
+                    <el-form-item label="Username"  prop="username">
                       <el-input :disabled="loadings.registerBtn" v-model="auth.username"></el-input>
                       </el-input>
                     </el-form-item>
-                    <el-form-item label="Password">
-                       <el-input :disabled="loadings.registerBtn" type="password" v-model="auth.password" auto-complete="off"></el-input>
+                    <el-form-item label="Password" prop="password">
+                       <el-input :disabled="loadings.registerBtn" type="password" v-model="auth.password" auto-complete="off" ></el-input>
                     </el-form-item>
-                    <el-form-item label="Confirm">
-                       <el-input :disabled="loadings.registerBtn" type="password" v-model="auth.passwordConfirmation" auto-complete="off"></el-input>
+                    <el-form-item label="Confirm" prop="passwordConfirmation">
+                       <el-input :disabled="loadings.registerBtn" type="password" v-model="auth.passwordConfirmation" auto-complete="off" ></el-input>
                     </el-form-item>
                     <el-button :loading="loadings.registerBtn" type="success" @click="register">Register</el-button>
                   </el-form>
@@ -85,8 +85,8 @@
               </div>
               <div id="hash" v-if="step == 2" key="hash">
 
-                <el-form ref="hashForm" :model="hash" label-width="120px">
-                  <el-form-item label="Value to Hash">
+                <el-form ref="hashForm" :rules="hashRules" :model="hash" label-width="120px">
+                  <el-form-item label="Value to Hash" prop="text">
                     <el-input type="textarea"
                       :disabled="loadings.hashBtn"
                       v-model="hash.text"
@@ -121,6 +121,15 @@ import AES from '../helpers/aes'
 
 export default {
   data () {
+    const validatePass2 = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('Please input the password again'))
+      } else if (value !== this.auth.password) {
+        callback(new Error('Two inputs don\'t match!'))
+      } else {
+        callback()
+      }
+    }
     return {
       loadings: {
         configBtn: false,
@@ -131,43 +140,8 @@ export default {
       connected: false,
       step: -1,
       client: {
-        publicKey: `-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAj3esh+8vIdSIb44d0yGB
-WDwOgQDAUqbZbSUkS7ho9OP3ptopmqw20Bc37RfKAqEjqY88kzl011BWw/MB/u0w
-5f5ps8VH/lqFE/WeUWbuYZGi7w5dcGrUmiDYOPyz4B7GlYFUwkkiaduIFIRwO36/
-+Vw9oC4cXpyxjJfFgVWLyhvCwuTOSy8E+LgZVNreIGeK0x1Cg3H3n2tR9I/ZmdWp
-oVqQS3w7AxcSwz8g+KekLEVwFjuoWEu2z0KHrgLoyI4ksDJI6pCI+PjhQydcLhST
-vSJCSBe+qleaecxrLR3P8Xs5HLYu3Mc4Sssdu+/3bBbUKufnxaTX6Rkp+SfxwGyK
-rwIDAQAB
------END PUBLIC KEY-----`,
-        privateKey: `-----BEGIN PRIVATE KEY-----
-MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCPd6yH7y8h1Ihv
-jh3TIYFYPA6BAMBSptltJSRLuGj04/em2imarDbQFzftF8oCoSOpjzyTOXTXUFbD
-8wH+7TDl/mmzxUf+WoUT9Z5RZu5hkaLvDl1watSaINg4/LPgHsaVgVTCSSJp24gU
-hHA7fr/5XD2gLhxenLGMl8WBVYvKG8LC5M5LLwT4uBlU2t4gZ4rTHUKDcfefa1H0
-j9mZ1amhWpBLfDsDFxLDPyD4p6QsRXAWO6hYS7bPQoeuAujIjiSwMkjqkIj4+OFD
-J1wuFJO9IkJIF76qV5p5zGstHc/xezkcti7cxzhKyx277/dsFtQq5+fFpNfpGSn5
-J/HAbIqvAgMBAAECggEASEcZY65rh1akmdb2TZzOph4zjGhNfBZU6bjRjVhNgDqt
-VKEKXsMuJi3cXhUjD6oQ5makNOO4apUt8TAnLEBg5y4CILBeMdV2v/R5GzeJFxyh
-AmCxUGZxz2iGpkchc+LtVvq+MddYgA46g2Opiz+zBbSj02QHpN66UENSHHN1po8K
-y9yNcXBxta3fwRS0g/ARLxbGnkKBhOxraV6UwOcjRFDAO6aC25KyP59JAM0SxmnO
-G1sIDwiYz8lfM1D5ydffWAKGCU7ZBkrVDM4yumSpqEwCMTTcnEjTbQ8ZDYSz1vZZ
-haVGzcgUrPtB9SGOgt9GbVrr0CMrSkEH9QVoPuVlGQKBgQDqYk+N92CZZ22pQ8te
-kz1wyyqcJWrltMHKMLxzbDFzcJoL219XmGAcPG7fk4Qc6zq8E0f/+dfrbNyCUBEf
-Zxal0t70QJWhCTxdQnLCTqLn1sdMr5POkVjEnF04kwacqolmNVC50H6sW2ilzzQn
-CzjwoTzfGWoyLWU5YZXCfXXEXQKBgQCcst57Qyz/Sa6SaFjHzVQeDc9TqtVo9niu
-H6DUTnCgM57mvBeYsedet359NJ3ET0vQT5RRAkPRBqgezxNb3OAa/dhV1glvArHr
-7UPsAH6Yp98taYFHomqivR8CXq9AxV2EcAwIHBYJR21U6g/7XGUEExz2tQ+AzrBd
-IFVo9CDaewKBgAMLIcNTKgLz792ZzsM8oDidusDqT3gKH9YTSe8pwX6hQK7Uu2k0
-xlK3ii0HClkhyNJ2YaH2SZJ6CGb8ySwiN44Rrel4CTldGFaRrVHOmZjvFglt4jp1
-crSi3ycD6bsRD9Wu7YxsI6jzSumURjYXlDazsUmoV9Os+TqEhOBQpr3VAoGAHBRx
-ieUfyx+JCPNp9WP2DuyqmnOiioygU5OXXnQv+oVFlFNgZxx6OZ7oK8eh/eu3yjx4
-d4vQW0S2G88/yNZr0mpqufcA+cOh3oVGBqSQCwsKEzk00YFpWoBJbkNJZHH5sCHk
-BhACYudJ0E2hT4nfEDvclNkdThe7wvRoWcZlnMECgYBDSLnDeyduLhvctgcJUU9F
-QdqFYAWjzXFfJItUGWAGFC7Lpn8PVcc7u6hH1oFJlohi39T2gYrKB5PmYN9/52/r
-u8ThbAvTm+yqMmsDNkBkohfx25p3NLsV0r46mpRXuraQTFXcYrc1mW+BkoteY06S
-Oe6lSHTplzRc0QPTat5+mQ==
------END PRIVATE KEY-----`
+        publicKey: '',
+        privateKey: ''
       },
       server: {
         publicKey: ''
@@ -186,6 +160,38 @@ Oe6lSHTplzRc0QPTat5+mQ==
         showDialog: false,
         text: '',
         hashedValue: 'Loading ...'
+      },
+      configRules: {
+        publicKey: [
+          { required: true, message: 'Please enter a public key' }
+        ],
+        privateKey: [
+          { required: true, message: 'Please enter a private key' }
+        ]
+      },
+      hashRules: {
+        text: [
+          { required: true, message: 'This field can not be empty' }
+        ]
+      },
+      authRules: {
+        username: [
+          { required: true, message: 'Please enter your username' }
+        ],
+        password: [
+          { required: true, message: 'Please enter your password' }
+        ]
+      },
+      registerRules: {
+        username: [
+          { required: true, message: 'Please enter your username' }
+        ],
+        password: [
+          { required: true, message: 'Please enter your password' }
+        ],
+        passwordConfirmation: [
+          { validator: validatePass2, trigger: 'blur' }
+        ]
       }
     }
   },
@@ -199,57 +205,81 @@ Oe6lSHTplzRc0QPTat5+mQ==
       this.auth.switchLoginSignup = !this.auth.switchLoginSignup
     },
     handshake () {
-      this.loadings.configBtn = true
-      this.$socket.emit('handshake', { publicKey: this.client.publicKey })
+      this.$refs['configForm'].validate(valid => {
+        if (valid) {
+          this.loadings.configBtn = true
+          this.$socket.emit('handshake', { publicKey: this.client.publicKey })
+        } else {
+          return false
+        }
+      })
     },
     fin () {
       this.$socket.emit('fin')
     },
     hashReq () {
-      this.hash.showDialog = false
-      this.loadings.hashBtn = true
-      let hashRequest = this.hash.text
+      this.$refs['hashForm'].validate(valid => {
+        if (valid) {
+          this.hash.showDialog = false
+          this.loadings.hashBtn = true
+          let hashRequest = this.hash.text
 
-      let request = {
-        data: hashRequest,
-        sign: null
-      }
+          let request = {
+            data: hashRequest,
+            sign: null
+          }
 
-      AES.encryptMessage(this.common.aesKey, JSON.stringify(request)).then(encryptedRequest => {
-        this.$socket.emit('hash', encryptedRequest)
+          AES.encryptMessage(this.common.aesKey, JSON.stringify(request)).then(encryptedRequest => {
+            this.$socket.emit('hash', encryptedRequest)
+          })
+        } else {
+          return false
+        }
       })
     },
     basicAuthenticate () {
-      this.loadings.authBtn = true
-      let authRequest = {
-        username: this.auth.username,
-        password: this.auth.password
-      }
+      this.$refs['authForm'].validate(valid => {
+        if (valid) {
+          this.loadings.authBtn = true
+          let authRequest = {
+            username: this.auth.username,
+            password: this.auth.password
+          }
 
-      let request = {
-        data: authRequest,
-        sign: null
-      }
+          let request = {
+            data: authRequest,
+            sign: null
+          }
 
-      AES.encryptMessage(this.common.aesKey, JSON.stringify(request)).then(encryptedRequest => {
-        this.$socket.emit('auth', encryptedRequest)
+          AES.encryptMessage(this.common.aesKey, JSON.stringify(request)).then(encryptedRequest => {
+            this.$socket.emit('auth', encryptedRequest)
+          })
+        } else {
+          return false
+        }
       })
     },
     passwordlessAuthenticate () {},
     register () {
-      this.loadings.registerBtn = true
-      let registerRequest = {
-        username: this.auth.username,
-        password: this.auth.password
-      }
+      this.$refs['authFormSignup'].validate(valid => {
+        if (valid) {
+          this.loadings.registerBtn = true
+          let registerRequest = {
+            username: this.auth.username,
+            password: this.auth.password
+          }
 
-      let request = {
-        data: registerRequest,
-        sign: null
-      }
+          let request = {
+            data: registerRequest,
+            sign: null
+          }
 
-      AES.encryptMessage(this.common.aesKey, JSON.stringify(request)).then(encryptedRequest => {
-        this.$socket.emit('register', encryptedRequest)
+          AES.encryptMessage(this.common.aesKey, JSON.stringify(request)).then(encryptedRequest => {
+            this.$socket.emit('register', encryptedRequest)
+          })
+        } else {
+          return false
+        }
       })
     }
   },
@@ -357,6 +387,7 @@ Oe6lSHTplzRc0QPTat5+mQ==
 }
 button {
   width: 60%;
+  margin-top: 1em;
 }
 p.liner {
   overflow: hidden;
