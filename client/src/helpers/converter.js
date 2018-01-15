@@ -1,3 +1,4 @@
+import 'text-encoding/lib/encoding-indexes.js'
 import { TextEncoder, TextDecoder } from 'text-encoding'
 
 function arrayBufferToUtf8 (arrayBuffer) {
@@ -5,12 +6,18 @@ function arrayBufferToUtf8 (arrayBuffer) {
 }
 
 function base64StringToArrayBuffer (base64) {
+  console.log('base64StringToArrayBuffer started')
+  console.log('base64 is ' + base64)
+  console.log(typeof base64)
+  base64 = base64.replace(/\s/g, '')
   var binaryString = atob(base64)
+  console.log('a to b finished')
   var len = binaryString.length
   var bytes = new Uint8Array(len)
   for (var i = 0; i < len; i++) {
     bytes[i] = binaryString.charCodeAt(i)
   }
+  console.log('base64StringToArrayBuffer finished')
   return bytes.buffer
 }
 

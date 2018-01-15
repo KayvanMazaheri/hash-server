@@ -1,8 +1,8 @@
 const crypto = require('crypto')
 
-const generateKey = (len = 32) => crypto.randomBytes(len)
+const generateKey = () => crypto.randomBytes(32)
 
-const generateIv = (len = 16) => crypto.randomBytes(len)
+const generateIv = () => crypto.randomBytes(16)
 
 // separate initialization vector from message
 const separateVectorFromData = (data) => {
@@ -39,6 +39,7 @@ const addIvToBody = (iv, encryptedBase64) => encryptedBase64 + iv.toString('base
 
 const createAesMessage = (aesKey, message) => {
   let aesIv = generateIv()
+  console.log(`IV: ${aesIv.toString('base64')} \nMSG: ${message}`)
   let encryptedMessage = encrypt(aesKey, aesIv, message)
   encryptedMessage = addIvToBody(aesIv, encryptedMessage)
 

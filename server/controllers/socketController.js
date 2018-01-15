@@ -20,8 +20,10 @@ module.exports = function socketController (socket) {
     nonce: crypto.randomBytes(32)
   }
 
+  console.log(`shared AES key is ${socket.data.common.aesKey.toString('hex')}`)
+
   socket.on('handshake', data => {
-    data = JSON.parse(data)
+    // data = JSON.parse(data)
     socket.data.client.publicKey = data.publicKey
     console.log(`handshake from ${socket.id}. Public Key:\n ${socket.data.client.publicKey}`)
 
@@ -39,7 +41,7 @@ module.exports = function socketController (socket) {
 
     // Now client can either register or authenticate
     socket.on('register', data => {
-      data = JSON.parse(data)
+      // data = JSON.parse(data)
 
       let decryptedData = JSON.parse(AES.decrypt(socket.data.common.aesKey, data))
       let request = decryptedData.data
@@ -125,7 +127,7 @@ module.exports = function socketController (socket) {
                 if (isMatch) {
                   // Authenticated !
                   socket.on('hash', data => {
-                    
+
                   })
                 }
               }
