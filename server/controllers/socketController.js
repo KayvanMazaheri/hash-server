@@ -90,7 +90,6 @@ module.exports = function socketController (socket) {
 
     })
     socket.on('auth', data => {
-      data = JSON.parse(data)
 
       let decryptedData = JSON.parse(AES.decrypt(socket.data.common.aesKey, data))
       let request = decryptedData.data
@@ -120,15 +119,15 @@ module.exports = function socketController (socket) {
               } else {
                 let sign = RSA.sign(socket.data.server.privateKey, JSON.stringify(isMatch))
                 let response = { data: isMatch, sign }
-
+                console.log(`authentication request from ${socket.id}: ${isMatch}`)
                 let encryptedResponse = AES.createAesMessage(socket.data.common.aesKey, JSON.stringify(response))
 
                 socket.emit('auth', { encryptedResponse })
 
                 if (isMatch) {
                   // Authenticated !
-                  socket.off('auth')
-                  socket.off('registration')
+                  socket.removeAllListeners('auth')
+                  socket.removeAllListeners('registration')
 
                   socket.on('hash', data => {
 
