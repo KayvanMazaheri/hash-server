@@ -38,7 +38,7 @@
                     v-model="client.privateKey">
                   </el-input>
                 </el-form-item>
-                <el-button v-loading="loadings.configBtn" type="primary" @click="handshake">Save Configuration</el-button>
+                <el-button :loading="loadings.configBtn" type="primary" @click="handshake">Save Configuration</el-button>
               </el-form>
             </div>
             <div id="auth" v-if="step == 1">
@@ -51,28 +51,28 @@
 
                 <el-form ref="authForm" :model="auth" label-width="120px" v-if="!auth.switchLoginSignup" key="1">
                   <el-form-item label="Username">
-                    <el-input v-model="auth.username"></el-input>
+                    <el-input :disabled="loadings.authBtn" v-model="auth.username"></el-input>
                     </el-input>
                   </el-form-item>
                   <el-form-item label="Password">
-                     <el-input type="password" v-model="auth.password" auto-complete="off"></el-input>
+                     <el-input :disabled="loadings.authBtn" type="password" v-model="auth.password" auto-complete="off"></el-input>
                   </el-form-item>
-                  <el-button type="primary" @click="basicAuthenticate">Authenticate</el-button>
+                  <el-button :loading="loadings.authBtn" type="primary" @click="basicAuthenticate">Authenticate</el-button>
                   <p class="liner"> OR </p>
-                  <el-button type="success" @click="passwordlessAuthenticate">Authenticate Without Password</el-button>
+                  <el-button :loading="loadings.authBtn" type="success" @click="passwordlessAuthenticate">Authenticate Without Password</el-button>
                 </el-form>
                 <el-form ref="authFormSignup" :model="auth" label-width="120px" v-if="auth.switchLoginSignup" key="2">
                   <el-form-item label="Username">
-                    <el-input v-model="auth.username"></el-input>
+                    <el-input :disabled="loadings.registerBtn" v-model="auth.username"></el-input>
                     </el-input>
                   </el-form-item>
                   <el-form-item label="Password">
-                     <el-input type="password" v-model="auth.password" auto-complete="off"></el-input>
+                     <el-input :disabled="loadings.registerBtn" type="password" v-model="auth.password" auto-complete="off"></el-input>
                   </el-form-item>
                   <el-form-item label="Confirm">
-                     <el-input type="password" v-model="auth.passwordConfirmation" auto-complete="off"></el-input>
+                     <el-input :disabled="loadings.registerBtn" type="password" v-model="auth.passwordConfirmation" auto-complete="off"></el-input>
                   </el-form-item>
-                  <el-button type="success" @click="register">Register</el-button>
+                  <el-button :loading="loadings.registerBtn" type="success" @click="register">Register</el-button>
                 </el-form>
               </transition>
               <el-button id="switchLoginSignup" type="text" @click="switchLoginSignup">{{switchLoginSignupText}}</el-button>
@@ -93,7 +93,9 @@ export default {
   data () {
     return {
       loadings: {
-        configBtn: false
+        configBtn: false,
+        registerBtn: false,
+        authBtn: false
       },
       connected: false,
       text: '',
@@ -162,12 +164,28 @@ Oe6lSHTplzRc0QPTat5+mQ==
       this.auth.switchLoginSignup = !this.auth.switchLoginSignup
     },
     handshake () {
-      this.$socket.emit('handshake', { publicKey: this.client.publicKey })
       this.loadings.configBtn = true
+      this.$socket.emit('handshake', { publicKey: this.client.publicKey })
     },
-    basicAuthenticate () {},
+    basicAuthenticate () {
+      this.loadings.authBtn = true
+      let authRequest = {
+        username: this.auth.username,
+        password: this.auth.password
+      }
+
+      let request = {
+        data: authRequest,
+        sign: null
+      }
+
+      AES.encryptMessage(this.common.aesKey, JSON.stringify(request)).then(encryptedRequest => {
+        this.$socket.emit('auth', encryptedRequest)
+      })
+    },
     passwordlessAuthenticate () {},
     register () {
+      this.loadings.registerBtn = true
       let registerRequest = {
         username: this.auth.username,
         password: this.auth.password
@@ -206,6 +224,11 @@ Oe6lSHTplzRc0QPTat5+mQ==
         title: 'Error',
         message: err
       })
+      this.loadings = {
+        configBtn: false,
+        registerBtn: false,
+        authBtn: false
+      }
     },
     handshake (data) {
       // console.log(`handshake: \n${JSON.stringify(data)}`)
@@ -236,6 +259,28 @@ Oe6lSHTplzRc0QPTat5+mQ==
           type: 'success'
         })
         this.auth.switchLoginSignup = false
+        this.loadings.registerBtn = false
+      })
+    },
+    auth (data) {
+      AES.decryptMessage(this.common.aesKey, data.encryptedResponse).then(isAuthenticated => {
+        isAuthenticated = JSON.parse(isAuthenticated)
+        // console.log(`Authenticated ${isAuthenticated}`)
+        if (isAuthenticated.data) {
+          this.$notify({
+            title: 'Authenticated',
+            message: 'Successfully authenticated! Now you can use this client to send hash requests.',
+            type: 'success'
+          })
+          this.step = 2
+        } else {
+          this.$notify.error({
+            title: 'Authentication Failed',
+            message: 'Please try again.'
+          })
+        }
+
+        this.loadings.authBtn = false
       })
     }
   }
