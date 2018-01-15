@@ -8,6 +8,13 @@
 --- _Read the [Project Statement](STATEMENT.md)._
 
 ## Run
+
+### Run From Binary
+1. [Download](https://github.com/KayvanMazaheri/hash-server/releases) the latest binary release according to your OS and architecture.  
+2. Just run the binary file!
+3. Access the client from http://localhost:3000 or http://kmazaheri.ir/hash-server
+
+### Run From Source
 ```bash
 git clone https://github.com/KayvanMazaheri/hash-server.git
 cd hash-server/server
