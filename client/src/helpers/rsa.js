@@ -1,4 +1,5 @@
 import converterWrapper from './converter'
+// import bufferify from 'json-bufferify'
 
 const crypto = window.crypto.subtle
 const rsaParams = {name: 'RSA-OAEP', hash: {name: 'SHA-1'}}
@@ -49,9 +50,53 @@ function privateDecrypt (keyInPemFormat, encryptedBase64Message) {
   })
 }
 
+// function sign (keyInPemFormat, message) {
+//   importPrivateKey(keyInPemFormat).then(function (key) {
+//     crypto.sign('RSASSA-PKCS1-v1_5', key, message)
+//                   .then(function (signature) {
+//                     resolve(converterWrapper.arrayBufferToUtf8(decrypted))
+//                   })
+//   })
+// }
+//
+// function verify (keyInPemFormat, message, signature) {
+//   return new Promise(function (resolve, reject) {
+//     importPublicKey(keyInPemFormat).then(function (key) {
+//       crypto.verify('RSASSA-PKCS1-v1_5', key, signature, message)
+//                     .then(function (verified) {
+//                       resolve(verified)
+//                     })
+//     })
+//   })
+// }
+
+// function sign (keyInPemFormat, message) {
+//   return new Promise(function (resolve, reject) {
+//     importPrivateKey(keyInPemFormat).then(function (key) {
+//       crypto.sign('RSASSA-PKCS1-v1_5', key, bufferify.encode(message))
+//                     .then(function (signature) {
+//                       resolve(signature)
+//                     })
+//     })
+//   })
+// }
+
+function verify (keyInPemFormat, message, signature) {
+  return new Promise(function (resolve, reject) {
+    importPublicKey(keyInPemFormat).then(function (key) {
+      crypto.verify('RSASSA-PKCS1-v1_5', key, converterWrapper.base64StringToArrayBuffer(signature), converterWrapper.base64StringToArrayBuffer(btoa(message)))
+                    .then(function (verified) {
+                      resolve(verified)
+                    })
+    })
+  })
+}
+
 export default {
   importPrivateKey: importPrivateKey,
   importPublicKey: importPublicKey,
   privateDecrypt: privateDecrypt,
-  publicEncrypt: publicEncrypt
+  publicEncrypt: publicEncrypt,
+  // sign,
+  verify
 }
