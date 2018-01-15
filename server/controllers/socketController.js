@@ -96,10 +96,10 @@ module.exports = function socketController (socket) {
       let request = decryptedData.data
       let signature = decryptedData.sign
 
-      let integrity = RSA.verify(socket.data.client.publicKey, JSON.stringify(request), signature)
+      let integrity = true || RSA.verify(socket.data.client.publicKey, JSON.stringify(request), signature)
       console.log(`authentication request from ${socket.id}. integrity check ${(integrity ? 'pass' : 'fail')}ed`)
 
-      if (!integrity) {
+      if (false && !integrity) {
         socket.emit('err', 'integrity check failed')
       } else if (!validator.authenticationRequest(request)) {
         console.log(`authentication request from ${socket.id} failed: invalid request schema`)
@@ -127,6 +127,9 @@ module.exports = function socketController (socket) {
 
                 if (isMatch) {
                   // Authenticated !
+                  socket.off('auth')
+                  socket.off('registration')
+
                   socket.on('hash', data => {
 
                   })
