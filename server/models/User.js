@@ -27,9 +27,7 @@ const comparePassword = (user, password, cb) => {
 
 let Users = new Datastore({ filename: dbPath, autoload: true })
 
-Users.ensureIndex({ fieldName: 'username', unique: true }, function (err) {
-  console.log(`error happened in saving user: ${err}`)
-})
+Users.ensureIndex({ fieldName: 'username', unique: true })
 
 module.exports = {
   Users,
